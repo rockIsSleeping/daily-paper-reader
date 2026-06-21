@@ -485,24 +485,50 @@ window.SubscriptionsManager = (function () {
   };
 
   const isConferenceYearSelectable = (conference, year) => {
+    return !getConferenceYearDisabledReason(conference, year);
+  };
+
+  /**
+   * 返回不可选的原因文案；可选时返回空字符串。
+   */
+  const getConferenceYearDisabledReason = (conference, year) => {
     const conf = normalizeText(conference).toUpperCase();
     const yearNum = parseInt(normalizeText(year), 10);
-    if (!Number.isFinite(yearNum)) return false;
+    if (!Number.isFinite(yearNum)) return '无效年份';
     // ECCV 双年（偶数年才有）
-    if (BIENNIAL_EVEN_CONFERENCES.has(conf) && yearNum % 2 !== 0) return false;
-    // 2026 年：只有已确认有数据的会议可选
+    if (BIENNIAL_EVEN_CONFERENCES.has(conf) && yearNum % 2 !== 0) {
+      return `${conf} 为双年会议，仅偶数年举办（如 2024、2026）`;
+    }
+    // 2026 年可用性
     const currentYear = new Date().getFullYear();
-    if (yearNum >= currentYear) {
-      if (!CONFERENCE_2026_AVAILABLE.has(conf)) return false;
+    if (yearNum >= currentYear && !CONFERENCE_2026_AVAILABLE.has(conf)) {
+      const ESTIMATED_DATES = {
+        CVPR:    '2026 年 7 月（论文上传后）',
+        ICML:    '2026 年 7 月会后',
+        IJCAI:   '2026 年 8 月会后',
+        ACL:     '2026 年 7 月会后',
+        EMNLP:   '2026 年 11 月会后',
+        NEURIPS: '2026 年 12 月会后',
+        NIPS:    '2026 年 12 月会后',
+        ECCV:    '2026 年秋季会后',
+      };
+      const est = ESTIMATED_DATES[conf];
+      if (est) return `预计 ${est} 纳入`;
+      return `${yearNum} 年暂无数据`;
     }
     // 原有的"当年待定"逻辑
     if (
       CONFERENCES_WITH_PENDING_CURRENT_YEAR.has(conf)
       && yearNum === currentYear
     ) {
-      return false;
+      const PENDING_DATES = {
+        ICML:    '预计 2026 年 7 月会后纳入',
+        NEURIPS: '预计 2026 年 12 月会后纳入',
+        NIPS:    '预计 2026 年 12 月会后纳入',
+      };
+      return PENDING_DATES[conf] || `${yearNum} 年论文尚未公开`;
     }
-    return true;
+    return '';
   };
 
   const renderConferenceChoiceButtons = () => {
@@ -513,14 +539,15 @@ window.SubscriptionsManager = (function () {
           const yearButtons = getConferenceYearOptions()
             .map((year) => {
               const active = selectedConferenceYearPairs.has(`${name}:${year}`);
-              const disabled = !isConferenceYearSelectable(name, year);
+              const reason = getConferenceYearDisabledReason(name, year);
+              const disabled = !!reason;
               return `<button
                 class="dpr-choice-pill${active ? ' is-active' : ''}${disabled ? ' is-disabled' : ''}"
                 type="button"
                 data-conference="${name}"
                 data-conference-year="${year}"
                 aria-pressed="${active ? 'true' : 'false'}"
-                ${disabled ? `disabled title="${year} 暂未接入，暂不可选择"` : ''}
+                ${disabled ? `disabled title="${escapeHtml(reason)}"` : ''}
               >${year}</button>`;
             })
             .join('');
