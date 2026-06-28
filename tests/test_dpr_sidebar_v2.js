@@ -63,6 +63,16 @@ function loadSidebarForTest(hash) {
   return require('../app/dpr-sidebar.js');
 }
 
+function cssRule(css, selector) {
+  const marker = selector + ' {';
+  const index = css.indexOf(marker);
+  assert.notEqual(index, -1, selector + ' CSS rule should exist');
+  const start = css.indexOf('{', index);
+  const end = css.indexOf('}', start);
+  assert.ok(start >= 0 && end > start, selector + ' CSS rule should be complete');
+  return css.slice(start + 1, end);
+}
+
 const sampleSidebar = `
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link" href="#/tutorial/README">使用教程</a>
@@ -332,7 +342,7 @@ function testSidebarUtilityHelpers() {
 function testEvidenceCssIsPersistent() {
   const css = fs.readFileSync('app/app.css', 'utf8');
   assert.ok(!/\\.dpr-sidebar-paper-evidence\\s*{[^}]*display:\\s*none/i.test(css));
-  assert.ok(!css.includes('.dpr-sidebar-paper:hover .dpr-sidebar-paper-evidence'));
+  assert.ok(!/\.dpr-sidebar-paper:hover \.dpr-sidebar-paper-evidence\s*{[^}]*display:\s*none/i.test(css));
   assert.ok(/\.dpr-sidebar-paper-actions\s*{[^}]*opacity:\s*0/i.test(css));
   assert.ok(css.includes('.dpr-sidebar-paper:hover .dpr-sidebar-paper-actions'));
   assert.ok(/\.dpr-sidebar-paper-evidence\s*{[^}]*background:\s*transparent/i.test(css));
@@ -350,12 +360,40 @@ function testSidebarPaperVisualStateCssContract() {
   assert.ok(/#dpr-sidebar-v2\s+\.dpr-sidebar-paper\s*{[^}]*position:\s*relative\s*!important/i.test(css));
   assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*content:\s*""/i.test(css));
   assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*background:\s*#ef4444/i.test(css));
-  assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*right:\s*8px/i.test(css));
+  assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*right:\s*6px/i.test(css));
   assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*top:\s*7px/i.test(css));
   assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*width:\s*8px/i.test(css));
   assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*height:\s*8px/i.test(css));
   assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*box-shadow:\s*0 0 0 2px #ffffff,\s*0 0 5px rgba\(239,\s*68,\s*68,\s*\.45\)/i.test(css));
   assert.ok(/\.dpr-sidebar-paper\[data-read="0"\]::after\s*{[^}]*z-index:\s*6/i.test(css));
+
+  const mainRule = cssRule(css, '.dpr-sidebar-paper-main');
+  assert.ok(/display:\s*block/i.test(mainRule));
+  assert.ok(/position:\s*relative/i.test(mainRule));
+  assert.ok(/min-width:\s*0/i.test(mainRule));
+
+  const linkRule = cssRule(css, '.dpr-sidebar-paper-link');
+  assert.ok(/width:\s*100%/i.test(linkRule));
+  assert.ok(/box-sizing:\s*border-box/i.test(linkRule));
+  assert.ok(/padding:\s*7px 8px 7px 14px/i.test(linkRule));
+
+  const titleRule = cssRule(css, '.dpr-sidebar-paper-title');
+  assert.ok(/display:\s*block/i.test(titleRule));
+  assert.ok(/white-space:\s*nowrap/i.test(titleRule));
+  assert.ok(/overflow:\s*hidden/i.test(titleRule));
+  assert.ok(/text-overflow:\s*ellipsis/i.test(titleRule));
+  assert.ok(/padding-right:\s*20px/i.test(titleRule));
+  assert.ok(/box-sizing:\s*border-box/i.test(titleRule));
+  assert.ok(!/-webkit-line-clamp/i.test(titleRule));
+
+  const actionsRule = cssRule(css, '.dpr-sidebar-paper-actions');
+  assert.ok(/position:\s*absolute/i.test(actionsRule));
+  assert.ok(/right:\s*6px/i.test(actionsRule));
+  assert.ok(/top:\s*50%/i.test(actionsRule));
+  assert.ok(/transform:\s*translateY\(-50%\)/i.test(actionsRule));
+  assert.ok(/width:\s*39px/i.test(actionsRule));
+
+  assert.ok(/\.dpr-sidebar-paper:hover \.dpr-sidebar-paper-evidence,\s*\.dpr-sidebar-paper:focus-within \.dpr-sidebar-paper-evidence,\s*\.dpr-sidebar-paper:hover \.dpr-sidebar-paper-meta,\s*\.dpr-sidebar-paper:focus-within \.dpr-sidebar-paper-meta\s*{[^}]*padding-right:\s*52px/i.test(css));
 
   const readRowRule = /\.dpr-sidebar-paper\[data-read-status="read"\]\s*{[^}]*background:/i;
   assert.ok(!readRowRule.test(css), 'read should not paint the whole row');
