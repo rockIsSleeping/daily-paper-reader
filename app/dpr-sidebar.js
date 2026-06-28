@@ -265,6 +265,12 @@
       preserveScroll: true,
     };
   }
+  function syncActiveOptionsForInitialLoad() {
+    return {
+      center: true,
+      autoMark: false,
+    };
+  }
 
   // ---------- 阅读状态（包一层，方便切换 Supabase / localStorage） ----------
   var ReadState = {
@@ -1737,7 +1743,7 @@
         renderBody();
         updateReadStateMarks();
         applyFilterAndSearch();
-        syncActive();
+        syncActive(syncActiveOptionsForInitialLoad());
         dispatchSidebarUpdated();
       })
       .catch(function (err) {
@@ -1808,6 +1814,7 @@
         rerenderOptionsForReadStateEvent: rerenderOptionsForReadStateEvent,
         rerenderOptionsForAxisInteraction: rerenderOptionsForAxisInteraction,
         rerenderOptionsForStatusClick: rerenderOptionsForStatusClick,
+        syncActiveOptionsForInitialLoad: syncActiveOptionsForInitialLoad,
       },
     };
   }

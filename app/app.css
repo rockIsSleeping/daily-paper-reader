@@ -7270,7 +7270,7 @@ body.dpr-sidebar-resizing {
   content: "";
   display: block;
   position: absolute;
-  right: 8px;
+  right: 42px;
   top: 8px;
   background: #ef4444;
 }

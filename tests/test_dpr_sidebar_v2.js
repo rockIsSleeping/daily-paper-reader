@@ -317,6 +317,11 @@ function testSidebarUtilityHelpers() {
     autoMark: false,
     preserveScroll: true,
   });
+  assert.equal(typeof tools.syncActiveOptionsForInitialLoad, 'function');
+  assert.deepEqual(tools.syncActiveOptionsForInitialLoad(), {
+    center: true,
+    autoMark: false,
+  });
   assert.equal(typeof tools.rerenderOptionsForAxisInteraction, 'function');
   assert.deepEqual(tools.rerenderOptionsForAxisInteraction('daily'), {
     syncActive: false,
@@ -343,6 +348,7 @@ function testSidebarPaperVisualStateCssContract() {
   assert.ok(!css.includes('dpr-sidebar-axis-tab-dot'));
   assert.ok(!css.includes('dpr-sidebar-axis-section-dot'));
   assert.ok(/\.dpr-sidebar-paper\[data-read="0"\] > \.dpr-sidebar-paper-unread-dot\s*{[^}]*background:\s*#ef4444/i.test(css));
+  assert.ok(/\.dpr-sidebar-paper\[data-read="0"\] > \.dpr-sidebar-paper-unread-dot\s*{[^}]*right:\s*42px/i.test(css));
   assert.ok(/\.dpr-sidebar-paper\[data-read="1"\] > \.dpr-sidebar-paper-unread-dot\s*{[^}]*display:\s*none/i.test(css));
 
   const readRowRule = /\.dpr-sidebar-paper\[data-read-status="read"\]\s*{[^}]*background:/i;
